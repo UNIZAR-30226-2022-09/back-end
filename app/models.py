@@ -75,9 +75,12 @@ class Tematica(db.Model):
 class Notificaciones(db.Model):
     __tablename__="notificaciones"
 
-    id  = db.Column(db.Integer, primary_key=True )                                                  # Id Notificacion
+    id  = db.Column(Integer, primary_key=True )                                                  # Id Notificacion
+    tipo = db.Column(Integer)
+    idPubli = db.Column(Integer)
+    nickEmisor = db.Column(db.String(20),db.ForeignKey('usuario.nick'),primary_key=True)
     fecha  = db.Column(db.Date)                                                                     # Fecha Notificacion
-    Usuario_Nicka = db.Column(db.String(20), db.ForeignKey('usuario.nick'),primary_key=True)        # ?????
+    nickReceptor = db.Column(db.String(20), db.ForeignKey('usuario.nick'),primary_key=True)        # ?????
 
 
 class Prefiere(db.Model):

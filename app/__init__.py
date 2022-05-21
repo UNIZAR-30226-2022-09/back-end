@@ -1,11 +1,10 @@
+from sqlite3 import connect
 from flask import Flask
-from flask_socketio import SocketIO
-
+from flask_socketio import SocketIO, emit
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
-
-
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.config.from_object('config.DevConfig')
@@ -13,6 +12,8 @@ app.config.from_object('config.DevConfig')
 #Configuraciones
 socketio = SocketIO(app)
 db = SQLAlchemy(app)
+CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 migrate = Migrate(app,db)
 login_manager = LoginManager(app)
 
@@ -37,3 +38,6 @@ app.register_blueprint(popularsBp)
 
 from app.recent.main import recentsBp
 app.register_blueprint(recentsBp)
+
+from app.sockets.chat import chatsBp
+app.register_blueprint(chatsBp)

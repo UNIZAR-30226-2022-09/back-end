@@ -4,7 +4,7 @@ import json
 from app.models import Propia
 from app.user.main import token_required
 from app.popular.main import paginaExplorados
-from app.action.main import guardaPDF, guardaRecomendacion
+from app.post.main import guardaPDF, guardaRecomendacion
 
 recentsBp = Blueprint('recents',__name__)
 

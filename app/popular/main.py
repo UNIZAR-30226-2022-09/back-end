@@ -3,7 +3,7 @@ from app import app, db
 from sqlalchemy import  select , and_
 import json
 from app.models import Usuario, Prefiere, Sigue, Publicacion, Trata_pub_del_tema, Propia, Recomendacion
-from app.action.main import guardarId, guardaPDF, guardaRecomendacion
+from app.post.main import guardarId, guardaPDF, guardaRecomendacion
 from app.user.main import token_required
 
 popularsBp = Blueprint('populars',__name__)

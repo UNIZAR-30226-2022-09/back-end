@@ -1,7 +1,7 @@
 from flask import Blueprint , request , jsonify, redirect, url_for
 import jwt
 from sqlalchemy import  select, and_
-from datetime import datetime
+import datetime
 import os
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash

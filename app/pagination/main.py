@@ -4,7 +4,7 @@ from sqlalchemy import  select, and_
 import json
 from app.user.main import token_required
 from app.models import Recomendacion, Propia, Guarda, Publicacion, Sigue
-from app.action.main import guardarId, guardaRecomendacion, guardaPDF
+from app.post.main import guardarId, guardaRecomendacion, guardaPDF
 
 paginationsBp = Blueprint('paginations',__name__)
 
@@ -222,22 +222,3 @@ def HomePaginado(current_user):
 def customSort(k):
     return k.ids
 
-
-
-def cargarDatosPDFstr(pdfname,portadaname,id):
-    pdf = select([Propia.pdf,Propia.portada]).where((Propia.id == id))
-    resulta = db.session.execute(pdf)
-
-    for a in resulta:
-        pdfname=str(a.pdf)
-        portadaname=str(a.portada)
-    return pdfname,portadaname
-def cargarDatosRecomendacionesstr(links,titulos,autores,id):
-    recom = select([Recomendacion.link,Recomendacion.titulo,Recomendacion.autor]).where((Recomendacion.id == id))
-    resulta = db.session.execute(recom)
-
-    for a in resulta:
-        links=str(a.link)
-        titulos=str(a.titulo)
-        autores=str(a.autor)
-    return links,titulos,autores
