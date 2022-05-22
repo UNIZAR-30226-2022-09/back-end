@@ -132,3 +132,16 @@ class Genera(db.Model):
 
     id = db.Column(db.Integer, db.ForeignKey('publicacion.id'),primary_key=True)
     Usuario_Nicka = db.Column(db.String(20), db.ForeignKey('usuario.nick'),primary_key=True)
+
+class UserSid(db.Model):
+    __tablename__="UserSid"
+
+    Sid = db.Column(db.String(50))                                            # Socket Id del Usuario en ese momento
+    User = db.Column(db.String(20), db.ForeignKey('usuario.nick'), primary_key=True)             # Usuario que contiene ese SocketId
+
+class chatRoom(db.Model):
+    __tablename__="chatRoom"
+
+    roomid = db.Column(db.Integer)   
+    user1 = db.Column(db.String(20), db.ForeignKey('usuario.nick'), primary_key=True)
+    user2 = db.Column(db.String(20), db.ForeignKey('usuario.nick'), primary_key=True)

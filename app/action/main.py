@@ -1,3 +1,4 @@
+from lib2to3.pgen2 import token
 from flask import Blueprint, request, jsonify
 from app import app, db
 import jwt
@@ -5,6 +6,7 @@ import json
 from sqlalchemy import  select , func
 import datetime
 from app.models import Usuario, Gusta, Comenta, Guarda, Propia, Sigue, Publicacion, Recomendacion
+from app.post.main import Comentario
 from app.user.main import token_required
 
 actionsBp = Blueprint('actions',__name__)
@@ -44,6 +46,8 @@ def darLike(current_user):
     data= request.get_json()
     
     gusta = Gusta.query.filter_by(id=data['id'] ,Usuario_Nicka=current_user).first()
+    
+    # Tipo == 1 porque es Like
 
     if gusta: 
         db.session.delete(gusta)
@@ -133,6 +137,25 @@ def seguirUser(current_user):
 
     token = jwt.encode({'nick' : current_user, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}, app.config['SECRET_KEY'])
     return jsonify({'token' : token.decode('UTF-8')})
+
+@app.route('/notifications', methods=['GET', 'POST'])
+def verNotificaciones():
+    
+    
+
+    notification = {
+        'tipo' : 1,
+        'nickEmisor' : "sancle",
+        'NickReceptor' : request.headers['current_user'],
+        'idPubli' : "12" ,
+        'fotoPerfil' : "hola.png",
+        'comentario' : "Comment Test"
+    }
+
+    print(request.headers['current_user'])
+    token = jwt.encode(notification, app.config['SECRET_KEY'])
+    return jsonify({'token' : token.decode('UTF-8')})
+
 
 def cargarDatosPDFstr(pdfname,portadaname,id):
     pdf = select([Propia.pdf,Propia.portada]).where((Propia.id == id))
