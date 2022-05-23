@@ -8,7 +8,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from app import db, app
 from app.models import Usuario , Sigue , Publicacion, Prefiere
+from flask_cors import CORS
 
+CORS(app)
 ABSOLUTE_PATH_TO_YOUR_FOLDER ='../static/fotosPerfil'
 
 usersBp = Blueprint('users',__name__)

@@ -4,6 +4,7 @@ from sqlalchemy import  Integer
 from flask import Blueprint
 
 modelsBp = Blueprint('models',__name__)
+
 # USUARIO
 
 class Usuario(db.Model):
@@ -31,7 +32,7 @@ class Chat(db.Model):
     __tablename__="chat"
 
     id=db.Column(db.Integer, primary_key=True)                                                      
-    user_id=db.Column(db.Integer, db.ForeignKey('usuario.nick'))                                    # Usuario emisor del mensaje
+    nick=db.Column(db.String(20), db.ForeignKey('usuario.nick'))                                    # Usuario emisor del mensaje
     created_at=db.Column(db.DateTime, default=datetime.utcnow)                                      # Momento creación mensaje
     updated_at=db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)            # Momento de actualización mensaje
     message=db.Column(db.String(500))                                                               # Contenido del mensaje
@@ -64,7 +65,7 @@ class Recomendacion(db.Model):
     titulo = db.Column(db.String(200),nullable=False)                                               # Titulo Recomendacion
     autor  = db.Column(db.String(200),nullable=False)                                               # Autor de la obra Recomendada
     id = db.Column(db.String(20), db.ForeignKey('publicacion.id'),primary_key=True)                 # Id Recomendacion
-    Usuario_Nicka = db.Column(db.String(20), db.ForeignKey('usuario.nick'))                         # Usuario Recomendador
+    Usuario_Nicka = db.Column(db.String(20), db.ForeignKey('usuario.nick'))                         # Usuario que ha hecho la recomendacion
 
 class Tematica(db.Model):
     __tablename__="tematica"
@@ -75,18 +76,21 @@ class Tematica(db.Model):
 class Notificaciones(db.Model):
     __tablename__="notificaciones"
 
-    id  = db.Column(Integer, primary_key=True )                                                  # Id Notificacion
-    tipo = db.Column(Integer)
+    id  = db.Column(Integer,primary_key=True)                                                # Id Notificacion
+    tipo = db.Column(Integer,nullable=False)                                                                       
     idPubli = db.Column(Integer)
-    nickEmisor = db.Column(db.String(20),db.ForeignKey('usuario.nick'),primary_key=True)
-    fecha  = db.Column(db.Date)                                                                     # Fecha Notificacion
-    nickReceptor = db.Column(db.String(20), db.ForeignKey('usuario.nick'),primary_key=True)        # ?????
+    nickEmisor = db.Column(db.String(20),db.ForeignKey('usuario.nick'),nullable=False)           # Nick Receptor
+    timestamp = db.Column(db.TIMESTAMP, nullable=False,                                             # Momento de publicación
+                  server_default=db.func.now(),                                                     
+                  onupdate=db.func.now())                                                                   # Fecha Notificacion
+    nickReceptor = db.Column(db.String(20), db.ForeignKey('usuario.nick'),nullable=False)        # Nick Emisor
+    comentario =  db.Column(db.String(200))                                                        # Comentario
 
 
 class Prefiere(db.Model):
     __tablename__="prefiere_tema"
 
-    Usuario_Nicka = db.Column(db.String(20), db.ForeignKey('usuario.nick'),primary_key=True)        # 
+    Usuario_Nicka = db.Column(db.String(20), db.ForeignKey('usuario.nick'),primary_key=True)        # Usuario que prefiere distintas tematicas
     tema = db.Column(db.String(50), db.ForeignKey('tematica.tema'),primary_key=True)
 
 
@@ -100,7 +104,7 @@ class Gusta(db.Model):
     __tablename__="gusta"
     
     id = db.Column(db.Integer, db.ForeignKey('publicacion.id'),primary_key=True)
-    Usuario_Nicka = db.Column(db.String(20), db.ForeignKey('usuario.nick'),primary_key=True)
+    Usuario_Nicka = db.Column(db.String(20), db.ForeignKey('usuario.nick'),primary_key=True)            # Quien le da Me gusta
 
 
 class Comenta(db.Model):
@@ -109,16 +113,16 @@ class Comenta(db.Model):
     id  = db.Column(Integer,primary_key=True)
     idPubli = db.Column(db.Integer, db.ForeignKey('publicacion.id'))
 
-    Usuario_Nicka = db.Column(db.String(20), db.ForeignKey('usuario.nick'))
-    comentario  = db.Column(db.String(1000))
+    Usuario_Nicka = db.Column(db.String(20), db.ForeignKey('usuario.nick'))                             # Quien comenta
+    comentario  = db.Column(db.String(1000))                                                            # Contenido comentario
 
 
 class Guarda(db.Model):
     __tablename__="pub_guardadas"
 
     id = db.Column(db.Integer, db.ForeignKey('publicacion.id'),primary_key=True)
-    Usuario_Nicka = db.Column(db.String(20), db.ForeignKey('usuario.nick'),primary_key=True) # de quien son los guardados
-    tipo =db.Column(db.Integer,nullable=False)
+    Usuario_Nicka = db.Column(db.String(20), db.ForeignKey('usuario.nick'),primary_key=True)            # Quien se lo guarda
+    tipo =db.Column(db.Integer,nullable=False)                                                          # 1. Articulos | 2. Recomendacion
 
 class Trata(db.Model):
     __tablename__="trata"
@@ -126,12 +130,6 @@ class Trata(db.Model):
     id_publi = db.Column(db.Integer, db.ForeignKey('publicacion.id'),primary_key=True)
     id_notif = db.Column(db.String(20), db.ForeignKey('notificaciones.id'),primary_key=True)
 
-
-class Genera(db.Model):
-    __tablename__="genera"
-
-    id = db.Column(db.Integer, db.ForeignKey('publicacion.id'),primary_key=True)
-    Usuario_Nicka = db.Column(db.String(20), db.ForeignKey('usuario.nick'),primary_key=True)
 
 class UserSid(db.Model):
     __tablename__="UserSid"

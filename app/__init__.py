@@ -1,6 +1,4 @@
-from sqlite3 import connect
 from flask import Flask
-from flask_socketio import SocketIO, emit
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -10,10 +8,8 @@ app = Flask(__name__)
 app.config.from_object('config.DevConfig')
 
 #Configuraciones
-socketio = SocketIO(app)
 db = SQLAlchemy(app)
-CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+CORS(app,cors_allowed_origins="*")
 migrate = Migrate(app,db)
 login_manager = LoginManager(app)
 

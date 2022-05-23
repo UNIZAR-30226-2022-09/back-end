@@ -8,8 +8,11 @@ from pdf2image import convert_from_path
 from app import app, db
 from app.user.main import token_required
 from app.models import Publicacion, Trata_pub_del_tema, Recomendacion, Propia, Guarda, Gusta, Usuario, Comenta
+from flask_cors import CORS
 
-ABSOLUTE_PATH_TO_YOUR_PDF_FOLDER ='../static/pdf'
+CORS(app,cors_allowed_origins="*")
+
+ABSOLUTE_PATH_TO_YOUR_PDF_FOLDER ='/home/ubuntu/back-end/app/static/pdf'
 
 postsBp = Blueprint('posts',__name__)
 
@@ -111,7 +114,7 @@ def guardarPDF(current_user):
             pages = convert_from_path(path, 0)
             for page in pages:
                 output = str(_id) + '.png'
-                pathimage = 'static/portadasPdf/' + output
+                pathimage = '/home/ubuntu/back-end/app/static/portadasPdf/' + output
                 page.save(pathimage, 'PNG')
                 propia.portada = output
                 db.session.add(propia)

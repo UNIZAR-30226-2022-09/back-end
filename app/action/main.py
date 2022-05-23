@@ -1,15 +1,46 @@
 from lib2to3.pgen2 import token
 from flask import Blueprint, request, jsonify
+from flask_login import current_user
 from app import app, db
 import jwt
 import json
 from sqlalchemy import  select , func
 import datetime
-from app.models import Usuario, Gusta, Comenta, Guarda, Propia, Sigue, Publicacion, Recomendacion
+from app.models import Notificaciones, Usuario, Gusta, Comenta, Guarda, Propia, Sigue, Publicacion, Recomendacion
 from app.post.main import Comentario
 from app.user.main import token_required
 
 actionsBp = Blueprint('actions',__name__)
+
+
+class Notificacion:
+  def __init__(self, nick,tipo, foto_de_perfil,timestamps):
+    self.nick = nick
+    self.foto_de_perfil = foto_de_perfil
+    self.tipo = tipo
+    self.timestamps = timestamps
+
+class meGusta(Notificacion):
+
+    def __init__(self, nick,tipo, foto_de_perfil,timestamps, id):
+        """Constructor de clase pdf"""
+
+        # Invoca al constructor de clase Persona
+        Notificacion.__init__(self,nick,tipo, foto_de_perfil,timestamps)
+
+        # Nuevos atributos
+        self.id = id
+
+class comenta(Notificacion):
+
+    def __init__(self, nick,tipo, foto_de_perfil,timestamps, comentario):
+        """Constructor de clase pdf"""
+
+        # Invoca al constructor de clase Persona
+        Notificacion.__init__(self,nick,tipo, foto_de_perfil,timestamps)
+
+        # Nuevos atributos
+        self.comentario = comentario
 
 @app.route('/buscarUsuarios', methods=['GET'])
 @token_required
@@ -46,14 +77,15 @@ def darLike(current_user):
     data= request.get_json()
     
     gusta = Gusta.query.filter_by(id=data['id'] ,Usuario_Nicka=current_user).first()
-    
-    # Tipo == 1 porque es Like
 
     if gusta: 
         db.session.delete(gusta)
     else:        
-        like = Gusta(id=data['id'], Usuario_Nicka=current_user)
+        like = Gusta(id=data['id'], Usuario_Nicka=current_user) 
+        nickRecep = Publicacion.query.filter_by(id=data['id']).first()
+        notificacion = Notificaciones(tipo=1,id=data['id'], nickEmisor=current_user, nickReceptor= nickRecep.Usuario_Nicka)
         db.session.add(like)
+        db.session.add(notificacion)
 
     db.session.commit()
 
@@ -68,6 +100,11 @@ def comentar(current_user):
 
     guardar = Comenta(idPubli=data['id'], Usuario_Nicka=current_user,comentario=data['comentario'])
     db.session.add(guardar)
+
+    nickRecep = Publicacion.query.filter_by(id=data['id']).first()
+    notificacion = Notificaciones(tipo=2,id=data['id'], nickEmisor=current_user, nickReceptor= nickRecep.Usuario_Nicka, comentario=data['comentario'])
+    db.session.add(notificacion)
+    
     db.session.commit()
 
 
@@ -76,8 +113,7 @@ def comentar(current_user):
 
 @app.route('/verComentarios', methods=['GET'])
 @token_required
-def verComentarios(current_user):
-
+def verComentarios():
     coments = []
     comentarios=Comenta.query.filter_by(idPubli=request.headers['id']).order_by(Comenta.id.desc())
     for r in comentarios:
@@ -123,37 +159,21 @@ def guardarPost(current_user):
 def seguirUser(current_user):
     data = request.get_json()
     print(data['nick'])
-    siguiendo = Sigue.query.filter_by(Usuario_Nicka=data['nick'], Usuario_Nickb=current_user).first()
+    siguiendo = Sigue.query.filter_by(Usuario_Nicka=data['nick'], Usuario_Nickb=current_user).first()   # Comprobamos si ya lo seguimos
     if siguiendo: 
         print("true")
-        db.session.delete(siguiendo)
+        db.session.delete(siguiendo)    # Si ya lo sigue, significa que lo queria dejar de seguir.
         
     else:
         print("false")
-        seguir = Sigue(Usuario_Nicka=data['nick'], Usuario_Nickb=current_user)
+        seguir = Sigue(Usuario_Nicka=data['nick'], Usuario_Nickb=current_user) # Si no lo sigue significa que lo quiere seguir
         db.session.add(seguir)
+        notificacion = Notificaciones(tipo=3, nickEmisor=current_user, nickReceptor= data['nick'])
+        db.session.add(notificacion)
 
     db.session.commit()
 
     token = jwt.encode({'nick' : current_user, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}, app.config['SECRET_KEY'])
-    return jsonify({'token' : token.decode('UTF-8')})
-
-@app.route('/notifications', methods=['GET', 'POST'])
-def verNotificaciones():
-    
-    
-
-    notification = {
-        'tipo' : 1,
-        'nickEmisor' : "sancle",
-        'NickReceptor' : request.headers['current_user'],
-        'idPubli' : "12" ,
-        'fotoPerfil' : "hola.png",
-        'comentario' : "Comment Test"
-    }
-
-    print(request.headers['current_user'])
-    token = jwt.encode(notification, app.config['SECRET_KEY'])
     return jsonify({'token' : token.decode('UTF-8')})
 
 
@@ -175,3 +195,51 @@ def cargarDatosRecomendacionesstr(links,titulos,autores,id):
         titulos=str(a.titulo)
         autores=str(a.autor)
     return links,titulos,autores
+
+
+
+@app.route('/notificationes', methods=['GET'])
+@token_required
+def verNotificaciones(current_user):
+
+    offsetreal = 0
+    limite=request.headers['limit']
+    offsetreal = int(request.headers['offset'])*int(limite)
+    notiVec = []
+    notis=Notificaciones.query.filter_by(nickReceptor=current_user).order_by(Notificaciones.id.desc())
+    for r in notis:
+        x = select([ Usuario.foto_de_perfil]).where((Usuario.nick == r.nickEmisor))
+        resultb = db.session.execute(x)
+        for a in resultb:
+            if r.tipo ==1:
+                notiVec.append(meGusta(r.nickEmisor,r.tipo,a.foto_de_perfil,r.timestamp))
+            elif r.tipo ==2:
+                notiVec.append(comenta(r.nickEmisor,r.tipo,a.foto_de_perfil,r.timestamp,r.comentario))
+            else:
+                notiVec.append(Notificacion(r.nickEmisor,r.tipo,a.foto_de_perfil,r.timestamp))
+
+
+
+    notiVec2=[]
+    for i in range (int(offsetreal), int(offsetreal) + int(limite)):
+        #print("x es = ", x , "i es: ", i ," offset: ", offsetreal, "limite: ", limite, "publis[i]: ", Publis[i])
+        if i< len(notiVec): 
+            print("i es: ", i ,"len publis: ", len(notiVec))
+            notiVec2.append(notiVec[i])
+
+    if len(notiVec2) == 0:
+        return jsonify({'fin': 'La lista se ha acabado no hay mas notis'})
+
+    finalDictionary = {}
+    i=0
+    for noti in notiVec2:
+        foto_de_perfil_Completo= 'http://51.255.50.207:5000/display/' + str(noti.foto_de_perfil)
+        if noti.tipo==1:
+            finalDictionary[noti.id] = { 'nick' : str(noti.nick) ,'foto_de_perfil' : str(foto_de_perfil_Completo), 'id' : noti.id}
+        elif noti.tipo==2:
+            finalDictionary[noti.id] = { 'nick' : str(noti.nick) ,'foto_de_perfil' : str(foto_de_perfil_Completo), 'comentario': str(noti.comentario)}
+        else:
+            finalDictionary[noti.id] = { 'nick' : str(noti.nick) ,'foto_de_perfil' : str(foto_de_perfil_Completo)}
+        i=i+1
+
+    return json.dumps(finalDictionary, indent = i)
