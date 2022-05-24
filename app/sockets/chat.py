@@ -26,55 +26,45 @@ def chat(message):
     nick = message['user']
     mensaje = message['message']
     room = message['sala']
-
+    
     chat_message = Chat(nick=nick, created_at = created_at, message=mensaje, room=room)
     db.session.add(chat_message)
     db.session.commit()
 
-    send((message['message'],message['user']), to=room)
-
-
+    print(room)
+    emit('message',(mensaje,nick), broadcast=True, to=room)
 
 @socketio.on('disconnect')
 def disconnect():
-    print("User left")
+    print("User left to Socket")
 
 @socketio.on('connect')
 def disconnect():
-    print("User Added")
+    print("User Added to Socket")
 
 # Funcion para almacenar por cada Usuario un SocketID único en esa sesion
 # que cambiará a traves de las diferentes sesiones que pueda tener
 
 @socketio.on('join')
-def join(room):
-    print("Join")
-    join_room(room['room'])
-
-
-@socketio.on('join')
 def on_join(data):
     join_room(data['room'])
-    send(' has entered the room.', to=data['room'])
+    emit('join' , 'A user has entered the room.', to=data['room'])
     print(type(data['room']))
     addRoomSession(data['room'])
 
 def addRoomSession(room):
-
     if 'rooms' not in session:
         session['rooms'] = []
 
     rooms = session['rooms']
-
     rooms.append(room)
     session['rooms'] = rooms
-
     print(session['rooms'])
 
 @socketio.on('leave')
 def on_leave(data):
     leave_room(data['room'])
-    send(' has left the room.', to=data['room'])
+    emit('leave' , 'A user has left the room.', to=data['room'])    
     print(type(data['room']))
     removeRoomSession(data['room'])
 

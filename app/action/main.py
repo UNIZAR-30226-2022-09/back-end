@@ -14,7 +14,8 @@ actionsBp = Blueprint('actions',__name__)
 
 
 class Notificacion:
-  def __init__(self, nick,tipo, foto_de_perfil,timestamps):
+  def __init__(self, id, nick,tipo, foto_de_perfil,timestamps):
+    self.id  = id
     self.nick = nick
     self.foto_de_perfil = foto_de_perfil
     self.tipo = tipo
@@ -22,24 +23,25 @@ class Notificacion:
 
 class meGusta(Notificacion):
 
-    def __init__(self, nick,tipo, foto_de_perfil,timestamps, id):
+    def __init__(self, id_pub, nick,tipo, foto_de_perfil,timestamps, id):
         """Constructor de clase pdf"""
 
         # Invoca al constructor de clase Persona
         Notificacion.__init__(self,nick,tipo, foto_de_perfil,timestamps)
 
         # Nuevos atributos
-        self.id = id
+        self.id_pub = id_pub
 
 class comenta(Notificacion):
 
-    def __init__(self, nick,tipo, foto_de_perfil,timestamps, comentario):
+    def __init__(self, id, nick,tipo, foto_de_perfil,timestamps, comentario):
         """Constructor de clase pdf"""
 
         # Invoca al constructor de clase Persona
-        Notificacion.__init__(self,nick,tipo, foto_de_perfil,timestamps)
+        Notificacion.__init__(self,id,nick,tipo, foto_de_perfil,timestamps)
 
         # Nuevos atributos
+        # PONER UN ID PUB
         self.comentario = comentario
 
 @app.route('/buscarUsuarios', methods=['GET'])
@@ -198,10 +200,9 @@ def cargarDatosRecomendacionesstr(links,titulos,autores,id):
 
 
 
-@app.route('/notificationes', methods=['GET'])
-@token_required
-def verNotificaciones(current_user):
-
+@app.route('/notificaciones', methods=['GET'])  # Tiene que haber token
+def verNotificaciones():
+    current_user = "Alvaro"
     offsetreal = 0
     limite=request.headers['limit']
     offsetreal = int(request.headers['offset'])*int(limite)

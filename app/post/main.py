@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, redirect, url_for
 import datetime
 import jwt
 import os
+import werkzeug
 from sqlalchemy import  select, func
 import json
 from pdf2image import convert_from_path
